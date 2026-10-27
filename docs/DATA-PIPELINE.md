@@ -111,6 +111,13 @@ window, and a backstop run costs almost nothing while the cron is healthy.
 The endpoint (`src/app/api/sync/route.ts` → `src/lib/pipeline/live.ts`) is
 deliberately narrow so it finishes well inside a serverless timeout:
 
+- **Quiet periods**: when no known match is within the pre/post-match window,
+  a successful live refresh is reused for 15 minutes. The check is stored in
+  `SyncRun`, so the external cron and GitHub backstop share it across processes.
+  It runs before loading clubs or calling providers. Matches near kick-off keep
+  the existing minute-by-minute cadence; failed runs are not reused.
+- **One database pool per process**: production and development both reuse the
+  Prisma client. Repository getters must not create a new client for each query.
 - **Window**: yesterday to tomorrow, so late finishes and early kick-offs are covered.
 - **One request per provider**: `fetchAcross` asks football-data's `/v4/matches`
   for every competition at once; if the plan refuses that endpoint it falls back

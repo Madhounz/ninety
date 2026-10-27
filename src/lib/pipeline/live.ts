@@ -44,6 +44,8 @@ const CATCH_UP_DAILY_BUDGET = 40;
  * once-a-minute match call is nothing next to that plan's ten a minute.
  */
 const SCORER_INTERVAL_MIN = 30;
+/** Quiet periods need fixture updates, not a full reconciliation every minute. */
+const IDLE_REFRESH_INTERVAL_MIN = 15;
 
 export interface LiveRefreshOutcome {
   ran: boolean;
@@ -75,7 +77,7 @@ export interface LiveRefreshOutcome {
 
 export interface LiveRefreshOptions {
   trigger?: string;
-  /** Ignore the overlap lock. Only for manual debugging. */
+  /** Ignore the overlap lock and idle interval. Only for manual debugging. */
   force?: boolean;
   log?: (line: string) => void;
 }
@@ -107,6 +109,11 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
     return idle("another sync is already running");
   }
 
+  const near = await store.hasMatchesAround(new Date(), DETAIL_BEFORE_MIN, DETAIL_AFTER_MIN);
+  if (!opts.force && !near && (await store.hasRecentRefresh(IDLE_REFRESH_INTERVAL_MIN))) {
+    return idle("quiet period: a successful refresh completed within the last 15 minutes");
+  }
+
   const repo = await getRepository();
   const [competitions, teams] = await Promise.all([repo.listCompetitions(), repo.listTeams()]);
   if (competitions.length === 0) return idle("no competitions stored yet; run the seed job first");
@@ -114,7 +121,6 @@ export async function runLiveRefresh(opts: LiveRefreshOptions = {}): Promise<Liv
   // Detail requests are metered. A match in range is worth the interval; with
   // nothing in range the pass runs far less often, and only to finish the
   // timelines of matches that were played while nobody was watching.
-  const near = await store.hasMatchesAround(new Date(), DETAIL_BEFORE_MIN, DETAIL_AFTER_MIN);
   const sinceDetail = await store.minutesSinceLastDetailRun();
   const interval = Number(process.env.NINETY_DETAIL_INTERVAL_MIN ?? DEFAULT_DETAIL_INTERVAL_MIN);
   const wait = near ? interval : CATCH_UP_INTERVAL_MIN;

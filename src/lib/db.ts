@@ -13,6 +13,8 @@ export function getPrisma(): PrismaClient {
   if (!connectionString) throw new Error("DATABASE_URL is required when DATA_SOURCE=db");
   const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
-  if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+  // Production needs the same singleton as development. Repository getters
+  // call this for every query; a fresh client also creates a fresh PG pool.
+  globalForPrisma.prisma = prisma;
   return prisma;
 }

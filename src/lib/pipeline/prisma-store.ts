@@ -42,6 +42,19 @@ export class PrismaSyncStore implements SyncStore {
     return last ? (Date.now() - last.startedAt.getTime()) / 60_000 : null;
   }
 
+  async hasRecentRefresh(withinMinutes: number) {
+    return (
+      (await this.db.syncRun.findFirst({
+        where: {
+          mode: "live",
+          error: null,
+          finishedAt: { gte: new Date(Date.now() - withinMinutes * 60_000) },
+        },
+        select: { id: true },
+      })) !== null
+    );
+  }
+
   async detailRequestsToday(now = new Date()) {
     const midnightUTC = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
