@@ -29,6 +29,7 @@ const RAIL = 6;
 /** Shared body for `/` and `/matches/[date]`. */
 export async function DayPage({ date }: { date: ISODate }) {
   const t = await getTranslations("home");
+  const ts = await getTranslations("simulator");
   const locale = await getLocale();
   const repo = await getRepository();
   const today = await viewerToday();
@@ -120,6 +121,21 @@ export async function DayPage({ date }: { date: ISODate }) {
         <InForm entries={inForm} teams={teamsById} competitions={competitionsById} />
       </div>
       <aside className="min-w-0 space-y-4 lg:pt-[52px]">
+        {focus.shown.find((c) => c.kind === "league") && (
+          <Link
+            href={`/leagues/${focus.shown.find((c) => c.kind === "league")!.slug}/simulator`}
+            className="group block rounded-card border border-accent/25 bg-accent-soft/40 p-4 hover:border-accent/60"
+          >
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-accent">
+              {ts("title")}
+            </p>
+            <h2 className="text-lg font-semibold tracking-tight">{ts("ctaTitle")}</h2>
+            <p className="mt-2 text-xs leading-relaxed text-muted">{ts("ctaLead")}</p>
+            <span className="mt-3 inline-block text-xs font-semibold text-accent group-hover:underline">
+              {ts("ctaAction")} {locale === "ar" ? "←" : "→"}
+            </span>
+          </Link>
+        )}
         <WorthWatching picks={picks} />
         <div className="flex items-baseline justify-between gap-2">
           <h2 className="text-[11px] font-semibold uppercase tracking-wide text-faint">

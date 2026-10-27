@@ -17,6 +17,7 @@ export default async function LeagueTablePage({
 }) {
   const t = await getTranslations("league");
   const tm = await getTranslations("match");
+  const ts = await getTranslations("simulator");
   const repo = await getRepository();
   const c = await repo.getCompetitionBySlug((await params).slug);
   if (!c) notFound();
@@ -54,6 +55,21 @@ export default async function LeagueTablePage({
         </p>
       </Section>
       <div className="min-w-0 space-y-6">
+        {c.kind === "league" && (
+          <Link
+            href={`/leagues/${c.slug}/simulator`}
+            className="group block rounded-card border border-accent/25 bg-accent-soft/40 p-5 hover:border-accent/60"
+          >
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-accent">
+              {ts("title")}
+            </p>
+            <h2 className="text-xl font-semibold tracking-tight">{ts("ctaTitle")}</h2>
+            <p className="mt-2 text-xs leading-relaxed text-muted">{ts("ctaLead")}</p>
+            <span className="mt-4 inline-block text-xs font-semibold text-accent group-hover:underline">
+              {ts("ctaAction")} →
+            </span>
+          </Link>
+        )}
         <Section
           title={nextRound ? tm("matchday", { n: nextRound }) : t("fixtures")}
           action={<Link href={`/leagues/${c.slug}/fixtures`}>{t("allFixtures")}</Link>}

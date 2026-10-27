@@ -31,6 +31,7 @@ export default async function LeagueLayout({
 }) {
   const t = await getTranslations("league");
   const tm = await getTranslations("match");
+  const ts = await getTranslations("simulator");
   const locale = await getLocale();
   const repo = await getRepository();
   const { slug } = await params;
@@ -77,6 +78,7 @@ export default async function LeagueLayout({
         ariaLabel={t("sections", { name })}
         tabs={[
           { href: base, label: t("tabTable"), exact: true },
+          ...(c.kind === "league" ? [{ href: `${base}/simulator`, label: ts("tab") }] : []),
           { href: `${base}/fixtures`, label: t("tabFixtures") },
           { href: `${base}/results`, label: t("tabResults") },
           { href: `${base}/race`, label: t("tabRace") },
